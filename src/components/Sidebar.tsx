@@ -119,7 +119,27 @@ export default function Sidebar({ completedSections }: SidebarProps) {
         );
       })}
 
-      <div style={{ marginTop: 'auto', padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+      <div style={{ marginTop: 'auto', padding: '20px 20px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+          <div style={{
+            width: 40,
+            height: 40,
+            borderRadius: '50%',
+            overflow: 'hidden',
+            border: '2px solid rgba(232,132,44,0.6)',
+            flexShrink: 0,
+          }}>
+            <img
+              src={`${import.meta.env.BASE_URL}avatar-sofiane.jpg`}
+              alt="Sofiane Coly"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 15%' }}
+            />
+          </div>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>Sofiane Coly</div>
+            <div style={{ fontSize: 11, opacity: 0.5 }}>Votre formateur</div>
+          </div>
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, opacity: 0.6, fontSize: 12 }}>
           <BarChart2 size={14} />
           <span>{completedSections.size} sections complétées</span>

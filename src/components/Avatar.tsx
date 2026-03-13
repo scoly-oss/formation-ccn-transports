@@ -4,11 +4,17 @@ interface AvatarProps {
   message?: string;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
+  variant?: 'friendly' | 'serious';
 }
 
-export default function Avatar({ message, size = 'md', className = '' }: AvatarProps) {
-  const sizeMap = { sm: 48, md: 72, lg: 120 };
+const BASE = import.meta.env.BASE_URL;
+
+export default function Avatar({ message, size = 'md', className = '', variant = 'friendly' }: AvatarProps) {
+  const sizeMap = { sm: 56, md: 80, lg: 130 };
   const s = sizeMap[size];
+  const photo = variant === 'serious'
+    ? `${BASE}avatar-sofiane-serious.jpg`
+    : `${BASE}avatar-sofiane.jpg`;
 
   return (
     <div className={`avatar-wrapper ${className}`} style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
@@ -21,19 +27,24 @@ export default function Avatar({ message, size = 'md', className = '' }: AvatarP
           height: s,
           minWidth: s,
           borderRadius: '50%',
-          background: 'linear-gradient(135deg, #e8842c 0%, #1e2d3d 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#fff',
-          fontSize: s * 0.4,
-          fontWeight: 700,
-          boxShadow: '0 4px 16px rgba(232,132,44,0.3)',
+          overflow: 'hidden',
+          boxShadow: '0 4px 20px rgba(232,132,44,0.25)',
           border: '3px solid #fff',
-          fontFamily: "'Inter', sans-serif",
+          position: 'relative',
+          background: '#1e2d3d',
         }}
       >
-        SC
+        <img
+          src={photo}
+          alt="Sofiane Coly — Formateur"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center 15%',
+            display: 'block',
+          }}
+        />
       </motion.div>
       {message && (
         <motion.div
@@ -43,26 +54,29 @@ export default function Avatar({ message, size = 'md', className = '' }: AvatarP
           style={{
             background: '#fff',
             borderRadius: 16,
-            padding: '12px 18px',
+            padding: '14px 20px',
             boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
             border: '1px solid #e2e6ec',
             fontSize: 15,
-            lineHeight: 1.5,
+            lineHeight: 1.6,
             color: '#1e2d3d',
-            maxWidth: 400,
+            maxWidth: 440,
             position: 'relative',
           }}
         >
           <div style={{
             position: 'absolute',
             left: -8,
-            top: 16,
+            top: 18,
             width: 0,
             height: 0,
             borderTop: '8px solid transparent',
             borderBottom: '8px solid transparent',
             borderRight: '8px solid #fff',
           }} />
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#e8842c', marginBottom: 4 }}>
+            Sofiane Coly
+          </div>
           {message}
         </motion.div>
       )}
