@@ -4,9 +4,12 @@ import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import ModulePage from './pages/ModulePage';
 import CertificatePage from './pages/CertificatePage';
+import ExamPage from './pages/ExamPage';
 import XPNotification from './components/XPNotification';
 import LevelUpModal from './components/LevelUpModal';
 import BadgeUnlock from './components/BadgeUnlock';
+import SearchModal from './components/SearchModal';
+import PomodoroTimer from './components/PomodoroTimer';
 import { LEVELS, BADGES, XP_VALUES, modules, getTotalSections } from './data/modules';
 
 function getLevel(xp: number) {
@@ -65,6 +68,21 @@ function App() {
     const saved = localStorage.getItem('ccn-streak');
     return saved ? JSON.parse(saved) : { lastDate: '', count: 0 };
   });
+
+  // Search state
+  const [showSearch, setShowSearch] = useState(false);
+
+  // Keyboard shortcut for search
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowSearch(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   // Notification states
   const [xpNotif, setXPNotif] = useState<{ show: boolean; amount: number; reason: string }>({ show: false, amount: 0, reason: '' });
@@ -208,6 +226,7 @@ function App() {
           xpProgress={xpProgress}
           streak={streak.count}
           earnedBadges={earnedBadges}
+          onSearchOpen={() => setShowSearch(true)}
         />
         <main style={{ marginLeft: 280, flex: 1, minHeight: '100vh' }}>
           <Routes>
@@ -244,6 +263,10 @@ function App() {
               }
             />
             <Route
+              path="/examen"
+              element={<ExamPage />}
+            />
+            <Route
               path="/certificat"
               element={
                 <CertificatePage
@@ -258,6 +281,9 @@ function App() {
           </Routes>
         </main>
       </div>
+
+      <SearchModal show={showSearch} onClose={() => setShowSearch(false)} />
+      <PomodoroTimer />
 
       <XPNotification
         show={xpNotif.show}

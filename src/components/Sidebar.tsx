@@ -1,4 +1,4 @@
-import { BookOpen, Users, Clock, Wallet, FileText, Calendar, Truck, Shield, MessageSquare, Home, Sparkles, Flame, Award } from 'lucide-react';
+import { BookOpen, Users, Clock, Wallet, FileText, Calendar, Truck, Shield, MessageSquare, Home, Sparkles, Flame, Award, Search, Brain } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { modules, getTotalSections, BADGES } from '../data/modules';
 
@@ -14,9 +14,10 @@ interface SidebarProps {
   xpProgress: number;
   streak: number;
   earnedBadges: string[];
+  onSearchOpen: () => void;
 }
 
-export default function Sidebar({ completedSections, xp, level, levelName, xpProgress, streak, earnedBadges }: SidebarProps) {
+export default function Sidebar({ completedSections, xp, level, levelName, xpProgress, streak, earnedBadges, onSearchOpen }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname;
@@ -133,8 +134,32 @@ export default function Sidebar({ completedSections, xp, level, levelName, xpPro
         </div>
       </div>
 
-      {/* Dashboard link */}
+      {/* Search button */}
       <div style={{ padding: '12px 12px 4px' }}>
+        <div
+          onClick={onSearchOpen}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            padding: '10px 14px',
+            cursor: 'pointer',
+            background: 'rgba(255,255,255,0.05)',
+            borderRadius: 10,
+            transition: 'all 0.2s',
+            fontSize: 13,
+            fontWeight: 500,
+            color: 'rgba(255,255,255,0.5)',
+          }}
+        >
+          <Search size={16} />
+          <span style={{ flex: 1 }}>Rechercher...</span>
+          <span style={{ fontSize: 10, opacity: 0.5, background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: 4 }}>⌘K</span>
+        </div>
+      </div>
+
+      {/* Dashboard link */}
+      <div style={{ padding: '4px 12px' }}>
         <div
           onClick={() => navigate('/')}
           style={{
@@ -154,6 +179,30 @@ export default function Sidebar({ completedSections, xp, level, levelName, xpPro
         >
           <Home size={18} color={currentPath === '/' || currentPath === import.meta.env.BASE_URL ? '#e8842c' : '#fff'} />
           Tableau de bord
+        </div>
+      </div>
+
+      {/* Exam link */}
+      <div style={{ padding: '0 12px 4px' }}>
+        <div
+          onClick={() => navigate('/examen')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            padding: '10px 14px',
+            cursor: 'pointer',
+            background: currentPath.startsWith('/examen')
+              ? 'rgba(232,132,44,0.12)'
+              : 'transparent',
+            borderRadius: 10,
+            transition: 'all 0.2s',
+            fontSize: 14,
+            fontWeight: 600,
+          }}
+        >
+          <Brain size={18} color={currentPath.startsWith('/examen') ? '#e8842c' : '#fff'} />
+          Examen final
         </div>
       </div>
 

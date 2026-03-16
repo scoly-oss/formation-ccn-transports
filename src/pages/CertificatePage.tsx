@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { modules, getTotalSections } from '../data/modules';
-import { GraduationCap, Award, ArrowLeft } from 'lucide-react';
+import { GraduationCap, Award, ArrowLeft, Download } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 
@@ -235,8 +235,26 @@ export default function CertificatePage({ completedSections, quizScores, xp, lev
         </div>
       </motion.div>
 
-      <div style={{ textAlign: 'center', marginTop: 32, fontSize: 13, color: 'var(--text-light)' }}>
-        Felicitations pour avoir termine cette formation !
+      {/* Export PDF button */}
+      <div style={{ textAlign: 'center', marginTop: 32 }}>
+        <motion.button
+          whileHover={{ scale: 1.03, boxShadow: '0 8px 32px rgba(232,132,44,0.3)' }}
+          whileTap={{ scale: 0.97 }}
+          onClick={() => window.print()}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 10,
+            padding: '16px 32px', borderRadius: 14, border: 'none',
+            background: 'var(--gradient-orange)', color: '#fff',
+            fontSize: 16, fontWeight: 700, cursor: 'pointer',
+            boxShadow: 'var(--shadow-orange)',
+            marginBottom: 16,
+          }}
+        >
+          <Download size={18} /> Telecharger en PDF
+        </motion.button>
+        <div style={{ fontSize: 13, color: 'var(--text-light)' }}>
+          Felicitations pour avoir termine cette formation !
+        </div>
       </div>
     </div>
   );

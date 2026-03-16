@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
 import { modules } from '../data/modules';
@@ -6,7 +6,86 @@ import Quiz from '../components/Quiz';
 import Avatar from '../components/Avatar';
 import FlashcardDeck from '../components/Flashcard';
 import ScenarioChallenge from '../components/ScenarioChallenge';
+import Notes from '../components/Notes';
+import { useInView } from '../hooks/useInView';
 import { ChevronLeft, ChevronRight, CheckCircle2, BookOpen, Brain, ArrowRight, Sparkles } from 'lucide-react';
+
+function ScrollReveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const { ref, isInView } = useInView();
+  return (
+    <div ref={ref} style={{
+      opacity: isInView ? 1 : 0,
+      transform: isInView ? 'translateY(0)' : 'translateY(24px)',
+      transition: `opacity 0.6s ease ${delay}s, transform 0.6s ease ${delay}s`,
+    }}>
+      {children}
+    </div>
+  );
+}
+
+function parseMarkdownTables(text: string): string {
+  // Process markdown tables
+  const lines = text.split('\n');
+  let result = '';
+  let inTable = false;
+  let tableRows: string[][] = [];
+
+  const flushTable = () => {
+    if (tableRows.length === 0) return;
+    let html = '<table><thead><tr>';
+    // First row is header
+    for (const cell of tableRows[0]) {
+      html += `<th>${cell.trim()}</th>`;
+    }
+    html += '</tr></thead><tbody>';
+    for (let i = 1; i < tableRows.length; i++) {
+      html += '<tr>';
+      for (const cell of tableRows[i]) {
+        html += `<td>${cell.trim()}</td>`;
+      }
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+    result += html;
+    tableRows = [];
+  };
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+      // Check if separator row (|---|---|)
+      const isSeparator = /^\|[\s\-:]+(\|[\s\-:]+)+\|$/.test(trimmed);
+      if (isSeparator) {
+        continue;
+      }
+      inTable = true;
+      const cells = trimmed.slice(1, -1).split('|');
+      tableRows.push(cells);
+    } else {
+      if (inTable) {
+        flushTable();
+        inTable = false;
+      }
+      result += line + '\n';
+    }
+  }
+  if (inTable) flushTable();
+
+  return result;
+}
+
+function renderContent(content: string): string {
+  // First parse tables
+  let html = parseMarkdownTables(content);
+  // Then handle other markdown
+  html = html
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n- /g, '<br/>• ')
+    .replace(/^/, '<p>')
+    .replace(/$/, '</p>');
+  return html;
+}
 
 interface ModulePageProps {
   completedSections: Set<string>;
@@ -32,8 +111,11 @@ export default function ModulePage({
   const mod = modules.find(m => m.id === moduleId);
   const moduleIndex = modules.findIndex(m => m.id === moduleId);
 
+  const [searchParams] = useSearchParams();
+
   useEffect(() => {
-    setActiveSectionIdx(0);
+    const sectionParam = searchParams.get('section');
+    setActiveSectionIdx(sectionParam ? parseInt(sectionParam, 10) : 0);
     setShowQuiz(false);
   }, [moduleId]);
 
@@ -269,22 +351,17 @@ export default function ModulePage({
             </h1>
 
             {/* Content */}
-            <div
-              className="content-body"
-              style={{ fontSize: 16, lineHeight: 1.8, color: 'var(--text-secondary)' }}
-              dangerouslySetInnerHTML={{
-                __html: section.content
-                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                  .replace(/\n\n/g, '</p><p>')
-                  .replace(/\n- /g, '<br/>• ')
-                  .replace(/\n\|/g, '\n|')
-                  .replace(/^/, '<p>')
-                  .replace(/$/, '</p>')
-              }}
-            />
+            <ScrollReveal>
+              <div
+                className="content-body"
+                style={{ fontSize: 16, lineHeight: 1.8, color: 'var(--text-secondary)' }}
+                dangerouslySetInnerHTML={{ __html: renderContent(section.content) }}
+              />
+            </ScrollReveal>
 
             {/* Key points */}
             {section.keyPoints && section.keyPoints.length > 0 && (
+              <ScrollReveal delay={0.1}>
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -326,10 +403,17 @@ export default function ModulePage({
                   ))}
                 </ul>
               </motion.div>
+              </ScrollReveal>
             )}
+
+            {/* Notes */}
+            <ScrollReveal delay={0.15}>
+              <Notes sectionId={section.id} />
+            </ScrollReveal>
 
             {/* Flashcards */}
             {hasFlashcards && section.flashcards && (
+              <ScrollReveal delay={0.2}>
               <FlashcardDeck
                 cards={section.flashcards}
                 onReview={(count) => {
@@ -342,6 +426,7 @@ export default function ModulePage({
                   }
                 }}
               />
+              </ScrollReveal>
             )}
 
             {/* Scenario */}
