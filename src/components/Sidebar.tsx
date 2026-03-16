@@ -1,6 +1,6 @@
-import { BookOpen, Users, Clock, Wallet, FileText, Calendar, Truck, Shield, MessageSquare, Home, BarChart2, Sparkles } from 'lucide-react';
+import { BookOpen, Users, Clock, Wallet, FileText, Calendar, Truck, Shield, MessageSquare, Home, Sparkles, Flame, Award } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { modules, getTotalSections } from '../data/modules';
+import { modules, getTotalSections, BADGES } from '../data/modules';
 
 const iconMap: Record<string, React.ComponentType<{ size?: number; color?: string }>> = {
   BookOpen, Users, Clock, Wallet, FileText, Calendar, Truck, Shield, MessageSquare,
@@ -8,9 +8,15 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; color?: strin
 
 interface SidebarProps {
   completedSections: Set<string>;
+  xp: number;
+  level: number;
+  levelName: string;
+  xpProgress: number;
+  streak: number;
+  earnedBadges: string[];
 }
 
-export default function Sidebar({ completedSections }: SidebarProps) {
+export default function Sidebar({ completedSections, xp, level, levelName, xpProgress, streak, earnedBadges }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname;
@@ -63,8 +69,72 @@ export default function Sidebar({ completedSections }: SidebarProps) {
         </div>
       </div>
 
+      {/* XP & Level bar */}
+      <div style={{
+        padding: '16px 20px',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 10,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{
+              width: 28,
+              height: 28,
+              borderRadius: 8,
+              background: 'var(--gradient-orange)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 12,
+              fontWeight: 900,
+              boxShadow: '0 2px 8px rgba(232,132,44,0.3)',
+            }}>
+              {level}
+            </div>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, lineHeight: 1 }}>{levelName}</div>
+              <div style={{ fontSize: 10, opacity: 0.4, fontWeight: 500 }}>{xp} XP</div>
+            </div>
+          </div>
+          {streak > 1 && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              fontSize: 11,
+              fontWeight: 700,
+              color: '#f59e0b',
+              background: 'rgba(245,158,11,0.15)',
+              padding: '3px 8px',
+              borderRadius: 20,
+            }}>
+              <Flame size={11} /> {streak}j
+            </div>
+          )}
+        </div>
+        <div style={{
+          width: '100%',
+          height: 4,
+          background: 'rgba(255,255,255,0.08)',
+          borderRadius: 2,
+          overflow: 'hidden',
+        }}>
+          <div style={{
+            height: '100%',
+            width: `${Math.min(xpProgress, 100)}%`,
+            background: 'var(--gradient-orange)',
+            borderRadius: 2,
+            transition: 'width 0.8s ease',
+          }} />
+        </div>
+      </div>
+
       {/* Dashboard link */}
-      <div style={{ padding: '16px 12px 8px' }}>
+      <div style={{ padding: '12px 12px 4px' }}>
         <div
           onClick={() => navigate('/')}
           style={{
@@ -89,7 +159,7 @@ export default function Sidebar({ completedSections }: SidebarProps) {
 
       {/* Modules label */}
       <div style={{
-        padding: '20px 26px 10px',
+        padding: '16px 26px 8px',
         fontSize: 11,
         fontWeight: 700,
         textTransform: 'uppercase',
@@ -154,29 +224,66 @@ export default function Sidebar({ completedSections }: SidebarProps) {
         })}
       </div>
 
+      {/* Badges mini display */}
+      {earnedBadges.length > 0 && (
+        <div style={{
+          padding: '12px 20px',
+          borderTop: '1px solid rgba(255,255,255,0.06)',
+        }}>
+          <div style={{
+            fontSize: 10,
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            opacity: 0.35,
+            letterSpacing: 1,
+            marginBottom: 8,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+          }}>
+            <Award size={10} /> Badges ({earnedBadges.length}/{BADGES.length})
+          </div>
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+            {BADGES.map(badge => {
+              const earned = earnedBadges.includes(badge.id);
+              return (
+                <div
+                  key={badge.id}
+                  title={earned ? `${badge.title}: ${badge.description}` : '???'}
+                  style={{
+                    fontSize: 16,
+                    filter: earned ? 'none' : 'grayscale(1) opacity(0.2)',
+                    cursor: 'default',
+                    transition: 'all 0.3s',
+                  }}
+                >
+                  {badge.icon}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Footer with avatar + progress */}
       <div style={{
-        padding: '20px 20px 24px',
+        padding: '16px 20px 24px',
         borderTop: '1px solid rgba(255,255,255,0.06)',
         marginTop: 'auto',
       }}>
-        {/* Mini progress bar */}
-        <div style={{ marginBottom: 16 }}>
+        <div style={{ marginBottom: 14 }}>
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: 8,
+            marginBottom: 6,
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, opacity: 0.6 }}>
-              <BarChart2 size={13} />
-              Progression
-            </div>
-            <span style={{ fontSize: 13, fontWeight: 800, color: '#e8842c' }}>{pct}%</span>
+            <div style={{ fontSize: 11, fontWeight: 600, opacity: 0.5 }}>Progression</div>
+            <span style={{ fontSize: 12, fontWeight: 800, color: '#e8842c' }}>{pct}%</span>
           </div>
           <div style={{
             width: '100%',
-            height: 6,
+            height: 5,
             background: 'rgba(255,255,255,0.08)',
             borderRadius: 3,
             overflow: 'hidden',
@@ -191,11 +298,10 @@ export default function Sidebar({ completedSections }: SidebarProps) {
           </div>
         </div>
 
-        {/* Avatar */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{
-            width: 44,
-            height: 44,
+            width: 40,
+            height: 40,
             borderRadius: '50%',
             overflow: 'hidden',
             background: 'var(--gradient-orange)',
@@ -216,7 +322,7 @@ export default function Sidebar({ completedSections }: SidebarProps) {
             </div>
           </div>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 700 }}>Sofiane Coly</div>
+            <div style={{ fontSize: 13, fontWeight: 700 }}>Sofiane Coly</div>
             <div style={{ fontSize: 11, opacity: 0.4, display: 'flex', alignItems: 'center', gap: 4 }}>
               <Sparkles size={10} /> Votre formateur
             </div>

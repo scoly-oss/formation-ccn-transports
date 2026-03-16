@@ -5,12 +5,33 @@ export interface QuizQuestion {
   explanation: string;
 }
 
+export interface Flashcard {
+  front: string;
+  back: string;
+  category?: string;
+}
+
+export interface ScenarioChoice {
+  text: string;
+  isCorrect: boolean;
+  feedback: string;
+  xpBonus?: number;
+}
+
+export interface Scenario {
+  situation: string;
+  context: string;
+  choices: ScenarioChoice[];
+}
+
 export interface Section {
   id: string;
   title: string;
   content: string;
   keyPoints?: string[];
   quiz?: QuizQuestion[];
+  flashcards?: Flashcard[];
+  scenario?: Scenario;
 }
 
 export interface Module {
@@ -21,6 +42,121 @@ export interface Module {
   color: string;
   sections: Section[];
 }
+
+export interface Badge {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  condition: (stats: GameStats) => boolean;
+}
+
+export interface GameStats {
+  xp: number;
+  level: number;
+  completedSections: number;
+  totalSections: number;
+  quizPerfectScores: number;
+  flashcardsReviewed: number;
+  scenariosCompleted: number;
+  streak: number;
+  modulesCompleted: number;
+}
+
+export const XP_VALUES = {
+  SECTION_COMPLETE: 50,
+  QUIZ_CORRECT: 20,
+  QUIZ_PERFECT: 100,
+  FLASHCARD_REVIEW: 10,
+  SCENARIO_CORRECT: 40,
+  SCENARIO_BONUS: 60,
+  MODULE_COMPLETE: 200,
+  STREAK_BONUS: 25,
+};
+
+export const LEVELS = [
+  { level: 1, name: 'Novice', xpRequired: 0 },
+  { level: 2, name: 'Apprenti', xpRequired: 200 },
+  { level: 3, name: 'Initié', xpRequired: 500 },
+  { level: 4, name: 'Connaisseur', xpRequired: 1000 },
+  { level: 5, name: 'Expert', xpRequired: 1800 },
+  { level: 6, name: 'Maître', xpRequired: 2800 },
+  { level: 7, name: 'Virtuose', xpRequired: 4000 },
+  { level: 8, name: 'Légende', xpRequired: 5500 },
+];
+
+export const BADGES: Badge[] = [
+  {
+    id: 'first-section',
+    title: 'Premier Pas',
+    description: 'Compléter votre première section',
+    icon: '🚀',
+    condition: (s) => s.completedSections >= 1,
+  },
+  {
+    id: 'quiz-master',
+    title: 'Quiz Master',
+    description: 'Obtenir un score parfait sur un quiz',
+    icon: '🎯',
+    condition: (s) => s.quizPerfectScores >= 1,
+  },
+  {
+    id: 'half-way',
+    title: 'Mi-Parcours',
+    description: 'Compléter la moitié des sections',
+    icon: '⭐',
+    condition: (s) => s.completedSections >= Math.ceil(s.totalSections / 2),
+  },
+  {
+    id: 'flashcard-fan',
+    title: 'Mémorisation',
+    description: 'Revoir 20 flashcards',
+    icon: '🧠',
+    condition: (s) => s.flashcardsReviewed >= 20,
+  },
+  {
+    id: 'scenario-pro',
+    title: 'Cas Pratique',
+    description: 'Réussir 3 scénarios',
+    icon: '💼',
+    condition: (s) => s.scenariosCompleted >= 3,
+  },
+  {
+    id: 'streak-3',
+    title: 'En Série',
+    description: 'Streak de 3 jours',
+    icon: '🔥',
+    condition: (s) => s.streak >= 3,
+  },
+  {
+    id: 'module-master',
+    title: 'Module Complet',
+    description: 'Terminer un module entier',
+    icon: '🏆',
+    condition: (s) => s.modulesCompleted >= 1,
+  },
+  {
+    id: 'level-5',
+    title: 'Expert CCN',
+    description: 'Atteindre le niveau 5',
+    icon: '👑',
+    condition: (s) => s.level >= 5,
+  },
+  {
+    id: 'all-done',
+    title: 'Diplômé',
+    description: 'Terminer toute la formation',
+    icon: '🎓',
+    condition: (s) => s.completedSections >= s.totalSections,
+  },
+  {
+    id: 'xp-1000',
+    title: 'Millionnaire XP',
+    description: 'Accumuler 1000 XP',
+    icon: '💎',
+    condition: (s) => s.xp >= 1000,
+  },
+];
 
 export const modules: Module[] = [
   {
@@ -50,6 +186,21 @@ Cette convention s'applique à environ **700 000 salariés** répartis dans plus
           "Environ 700 000 salariés concernés",
           "Texte de référence pour les relations de travail"
         ],
+        flashcards: [
+          { front: "Quel est le numéro IDCC de la CCN Transports ?", back: "IDCC 16", category: "Identification" },
+          { front: "Que signifie TRM ?", back: "Transport Routier de Marchandises", category: "Définitions" },
+          { front: "Combien de salariés sont couverts ?", back: "Environ 700 000 salariés", category: "Chiffres clés" },
+          { front: "Combien d'entreprises sont concernées ?", back: "Plus de 40 000 entreprises", category: "Chiffres clés" },
+        ],
+        scenario: {
+          situation: "Vous êtes RH dans une entreprise de logistique. Un nouveau salarié vous demande quel texte régit ses droits.",
+          context: "L'entreprise effectue du stockage et de la manutention pour des transporteurs routiers.",
+          choices: [
+            { text: "La convention collective de la logistique (IDCC 1588)", isCorrect: false, feedback: "L'activité auxiliaire du transport relève de la CCN Transports (IDCC 16), pas de la logistique pure." },
+            { text: "La CCN des Transports Routiers (IDCC 16)", isCorrect: true, feedback: "Exact ! Les activités auxiliaires du transport (logistique, manutention) relèvent bien de l'IDCC 16.", xpBonus: 20 },
+            { text: "Le Code du travail uniquement", isCorrect: false, feedback: "Le Code du travail s'applique toujours, mais la convention collective vient compléter et améliorer ses dispositions." },
+          ],
+        },
         quiz: [
           {
             question: "Quel est le numéro IDCC de la CCN des Transports Routiers ?",
@@ -86,6 +237,20 @@ Cette convention s'applique à environ **700 000 salariés** répartis dans plus
           "RSE et Code des transports complètent le dispositif",
           "Certaines dispositions de la CCN sont d'ordre public conventionnel"
         ],
+        flashcards: [
+          { front: "Quel est l'ordre de la hiérarchie des normes ?", back: "1. Code du travail\n2. Convention collective\n3. Accords d'entreprise\n4. Contrat de travail", category: "Hiérarchie" },
+          { front: "Depuis quand les accords d'entreprise peuvent-ils déroger à la CCN ?", back: "Depuis les ordonnances Macron de 2017", category: "Réforme" },
+          { front: "Que signifie RSE dans ce contexte ?", back: "Règlement Social Européen", category: "Réglementation" },
+        ],
+        scenario: {
+          situation: "Un accord d'entreprise propose de réduire le préavis de licenciement en dessous du minimum conventionnel.",
+          context: "L'entreprise de 200 salariés souhaite harmoniser les préavis pour tous les salariés.",
+          choices: [
+            { text: "C'est possible depuis 2017, les accords d'entreprise priment", isCorrect: false, feedback: "Attention ! Certaines dispositions de la CCN sont d'ordre public conventionnel et ne peuvent pas être dégradées par un accord d'entreprise." },
+            { text: "C'est impossible, le préavis conventionnel est un minimum garanti", isCorrect: true, feedback: "Bravo ! Les préavis font partie des dispositions de la CCN auxquelles un accord d'entreprise ne peut pas déroger en défaveur du salarié.", xpBonus: 20 },
+            { text: "C'est possible uniquement avec l'accord de chaque salarié", isCorrect: false, feedback: "Le consentement individuel ne suffit pas à déroger aux minima conventionnels." },
+          ],
+        },
         quiz: [
           {
             question: "Depuis quand les accords d'entreprise peuvent-ils déroger à la convention collective dans certains domaines ?",
@@ -140,6 +305,12 @@ Cette convention s'applique à environ **700 000 salariés** répartis dans plus
           "TAM : groupes 1 à 4",
           "Cadres : groupes 1 à 5"
         ],
+        flashcards: [
+          { front: "Combien de catégories de personnel dans la CCN ?", back: "4 catégories :\nOuvriers, Employés, TAM, Cadres", category: "Classifications" },
+          { front: "Que signifie 150M ?", back: "Conducteur très qualifié « maître » — le plus haut niveau ouvrier", category: "Classifications" },
+          { front: "Combien de groupes pour les Cadres ?", back: "5 groupes (1 à 5), du cadre débutant au cadre dirigeant", category: "Classifications" },
+          { front: "Coefficient d'un Agent de Maîtrise principal ?", back: "Coefficient 185 (Groupe 4 TAM)", category: "Coefficients" },
+        ],
         quiz: [
           {
             question: "Combien de catégories de personnel sont prévues par la CCN ?",
@@ -185,6 +356,20 @@ Cette convention s'applique à environ **700 000 salariés** répartis dans plus
           "150M = plus haut niveau conducteur",
           "Classification liée au véhicule, tonnage et compétences"
         ],
+        flashcards: [
+          { front: "Que signifie le « V » après un coefficient ?", back: "Il désigne les coefficients spécifiques aux conducteurs de Voyageurs", category: "Classifications" },
+          { front: "Quel est le coefficient d'un conducteur PL ?", back: "Groupe 6, coefficient 138", category: "Conducteurs" },
+          { front: "Quel groupe pour un conducteur grand tourisme ?", back: "Groupe 10", category: "Conducteurs" },
+        ],
+        scenario: {
+          situation: "Un salarié conduit un véhicule de 3,2 tonnes et demande à être classé comme conducteur poids lourd.",
+          context: "Il argue que son véhicule est très chargé et que le travail est similaire.",
+          choices: [
+            { text: "Il a raison, c'est le poids chargé qui compte", isCorrect: false, feedback: "La classification se base sur le PTAC du véhicule. En dessous de 3,5t, c'est un véhicule léger." },
+            { text: "Il relève de la classification véhicules légers (< 3,5t)", isCorrect: true, feedback: "Correct ! La limite est fixée à 3,5 tonnes. Ce salarié relève des conducteurs de véhicules légers.", xpBonus: 20 },
+            { text: "C'est à l'employeur de choisir librement", isCorrect: false, feedback: "La classification est déterminée par des critères objectifs de la CCN, pas au libre choix de l'employeur." },
+          ],
+        },
         quiz: [
           {
             question: "Que signifie le suffixe 'V' dans les coefficients ?",
@@ -232,6 +417,21 @@ Cette convention s'applique à environ **700 000 salariés** répartis dans plus
           "Temps de conduite : 9h/jour, 56h/semaine, 90h/2 semaines",
           "Le temps de service inclut conduite + attente + chargement"
         ],
+        flashcards: [
+          { front: "Durée journalière maximale de travail ?", back: "10 heures (extensible à 12h dans certains cas)", category: "Durées" },
+          { front: "Temps de conduite journalier max ?", back: "9 heures (10h deux fois par semaine)", category: "Conduite" },
+          { front: "Temps de conduite bi-hebdomadaire max ?", back: "90 heures sur 2 semaines consécutives", category: "Conduite" },
+          { front: "Que comprend le temps de service ?", back: "Conduite + attente + chargement/déchargement + entretien + administratif", category: "Définitions" },
+        ],
+        scenario: {
+          situation: "Un conducteur a conduit 9h30 aujourd'hui. Son employeur lui demande de faire encore 1h de conduite demain en plus de sa journée normale.",
+          context: "Le conducteur a déjà utilisé une de ses extensions à 10h cette semaine.",
+          choices: [
+            { text: "C'est possible, il n'a pas atteint 10h aujourd'hui", isCorrect: false, feedback: "Le conducteur a dépassé les 9h de conduite journalière, ce qui nécessite l'usage d'une extension. S'il l'a déjà utilisée, il n'en reste qu'une." },
+            { text: "C'est possible s'il n'a pas encore utilisé sa 2ème extension hebdomadaire", isCorrect: true, feedback: "Exact ! Un conducteur peut étendre à 10h maximum 2 fois par semaine. S'il lui reste une extension, c'est possible.", xpBonus: 20 },
+            { text: "C'est impossible, il a déjà dépassé ses 9h", isCorrect: false, feedback: "Les 9h sont extensibles à 10h, deux fois par semaine. Il faut vérifier s'il a encore une extension disponible." },
+          ],
+        },
         quiz: [
           {
             question: "Quelle est la durée maximale de conduite journalière ?",
@@ -277,6 +477,12 @@ Cette convention s'applique à environ **700 000 salariés** répartis dans plus
           "Repos hebdomadaire : 45h (réduit 24h minimum)",
           "Repos hebdo normal obligatoire toutes les 2 semaines"
         ],
+        flashcards: [
+          { front: "Pause obligatoire après combien de conduite ?", back: "Après 4h30 → pause de 45 min", category: "Pauses" },
+          { front: "Fractionnement de la pause ?", back: "15 min + 30 min (dans cet ordre)", category: "Pauses" },
+          { front: "Repos journalier normal ?", back: "11 heures consécutives minimum", category: "Repos" },
+          { front: "Repos hebdomadaire normal ?", back: "45 heures consécutives", category: "Repos" },
+        ],
         quiz: [
           {
             question: "Après combien d'heures de conduite la pause est-elle obligatoire ?",
@@ -320,6 +526,20 @@ Cette convention s'applique à environ **700 000 salariés** répartis dans plus
           "Majorations : 25% puis 50%",
           "Contingent annuel : 195h pour grands routiers"
         ],
+        flashcards: [
+          { front: "Durée équivalente grands routiers ?", back: "43 heures par semaine", category: "Équivalences" },
+          { front: "Contingent annuel HS grands routiers ?", back: "195 heures par an", category: "HS" },
+          { front: "Taux de majoration des HS ?", back: "25% (premières heures) puis 50%", category: "HS" },
+        ],
+        scenario: {
+          situation: "Un conducteur grand routier a effectué 48h cette semaine. Son employeur calcule ses heures supplémentaires à partir de 35h.",
+          context: "Le conducteur est qualifié de « grand routier » au sens de la CCN.",
+          choices: [
+            { text: "Le calcul est correct, les HS se comptent à partir de 35h", isCorrect: false, feedback: "Pour les grands routiers, le régime d'équivalence fixe le seuil à 43h. Les HS se décomptent au-delà." },
+            { text: "Les HS se calculent au-delà de 43h, pas 35h", isCorrect: true, feedback: "Exact ! Grâce au régime d'équivalence, les HS des grands routiers se décomptent au-delà de 43h. Il n'a donc que 5 HS.", xpBonus: 20 },
+            { text: "Il n'y a pas d'heures supplémentaires dans le transport", isCorrect: false, feedback: "Il y a bien des HS dans le transport, mais le seuil est différent selon la catégorie du conducteur." },
+          ],
+        },
         quiz: [
           {
             question: "Quelle est la durée équivalente hebdomadaire pour un conducteur grand routier ?",
@@ -365,6 +585,11 @@ Cette convention s'applique à environ **700 000 salariés** répartis dans plus
           "Garantie mensuelle minimale obligatoire",
           "Indemnités de déplacement exclues du minimum garanti"
         ],
+        flashcards: [
+          { front: "Base mensuelle de calcul (durée légale) ?", back: "151,67 heures par mois", category: "Rémunération" },
+          { front: "Les indemnités de déplacement entrent-elles dans le minimum garanti ?", back: "NON, elles en sont exclues", category: "Rémunération" },
+          { front: "Qui fixe les minima conventionnels ?", back: "Les accords de branche, négociés régulièrement", category: "Rémunération" },
+        ],
         quiz: [
           {
             question: "Les indemnités de déplacement sont-elles incluses dans la garantie minimale mensuelle ?",
@@ -407,6 +632,10 @@ Cette convention s'applique à environ **700 000 salariés** répartis dans plus
           "Revalorisées régulièrement par accord de branche",
           "L'employeur doit justifier la réalité du déplacement"
         ],
+        flashcards: [
+          { front: "Quels sont les 4 types d'indemnités de déplacement ?", back: "1. Repas unique\n2. Repas grand déplacement\n3. Découcher (nuitée)\n4. Cumul repas + découcher", category: "Indemnités" },
+          { front: "Quand verse-t-on l'indemnité de découcher ?", back: "Quand le conducteur ne peut pas rentrer dormir chez lui", category: "Indemnités" },
+        ],
         quiz: [
           {
             question: "Quand l'indemnité de découcher est-elle versée ?",
@@ -443,6 +672,22 @@ Cette convention s'applique à environ **700 000 salariés** répartis dans plus
           "Calculée sur le minimum conventionnel",
           "Doit figurer distinctement sur le bulletin de paie"
         ],
+        flashcards: [
+          { front: "Taux prime ancienneté après 2 ans ?", back: "2%", category: "Primes" },
+          { front: "Taux prime ancienneté après 5 ans ?", back: "4%", category: "Primes" },
+          { front: "Taux prime ancienneté après 10 ans ?", back: "6%", category: "Primes" },
+          { front: "Taux prime ancienneté après 15 ans ?", back: "8%", category: "Primes" },
+          { front: "Sur quelle base est calculée la prime ?", back: "Le minimum conventionnel du coefficient", category: "Primes" },
+        ],
+        scenario: {
+          situation: "Un salarié a 12 ans d'ancienneté. Son employeur lui verse une prime de 4% car il considère que le salarié a changé de poste il y a 5 ans.",
+          context: "Le changement de poste n'a pas entraîné de nouveau contrat de travail.",
+          choices: [
+            { text: "L'employeur a raison, le changement de poste remet les compteurs à zéro", isCorrect: false, feedback: "L'ancienneté se calcule depuis la date d'entrée dans l'entreprise, pas depuis le dernier changement de poste." },
+            { text: "Le salarié a droit à 6% car son ancienneté est de 12 ans", isCorrect: true, feedback: "Exact ! L'ancienneté se calcule depuis la date d'entrée. Avec 12 ans > 10 ans, le taux est de 6%.", xpBonus: 20 },
+            { text: "La prime n'est plus due après un changement de poste", isCorrect: false, feedback: "La prime d'ancienneté est toujours due tant que le contrat de travail n'est pas rompu." },
+          ],
+        },
         quiz: [
           {
             question: "Quel est le taux de la prime d'ancienneté après 10 ans ?",
@@ -496,6 +741,11 @@ Cette convention s'applique à environ **700 000 salariés** répartis dans plus
           "Cadres : 4 mois (+4 renouvellement)",
           "Renouvellement = accord exprès du salarié obligatoire"
         ],
+        flashcards: [
+          { front: "Période d'essai Ouvriers ?", back: "2 mois + 1 mois renouvellement = 3 mois max", category: "Contrat" },
+          { front: "Période d'essai Cadres ?", back: "4 mois + 4 mois renouvellement = 8 mois max", category: "Contrat" },
+          { front: "Condition du renouvellement ?", back: "Accord exprès du salarié AVANT expiration (le silence ne vaut pas accord)", category: "Contrat" },
+        ],
         quiz: [
           {
             question: "Quelle est la durée maximale de la période d'essai pour un cadre (renouvellement compris) ?",
@@ -538,6 +788,11 @@ Cette convention s'applique à environ **700 000 salariés** répartis dans plus
           "Cadres : 3 mois de préavis dans tous les cas",
           "2h/jour de recherche d'emploi pendant le préavis",
           "Heures rémunérées en cas de licenciement uniquement"
+        ],
+        flashcards: [
+          { front: "Préavis licenciement d'un Cadre ?", back: "3 mois (quelle que soit l'ancienneté)", category: "Préavis" },
+          { front: "Heures de recherche d'emploi pendant le préavis ?", back: "2 heures par jour", category: "Préavis" },
+          { front: "Les heures de recherche sont-elles rémunérées ?", back: "Oui en licenciement, Non en démission", category: "Préavis" },
         ],
         quiz: [
           {
@@ -584,6 +839,20 @@ Cette convention s'applique à environ **700 000 salariés** répartis dans plus
           "Ancienneté minimale : 8 mois",
           "Base : moyenne des 12 ou 3 derniers mois (le plus favorable)"
         ],
+        flashcards: [
+          { front: "Indemnité Ouvriers/Employés (≤ 10 ans) ?", back: "2/10ème de mois par année", category: "Licenciement" },
+          { front: "Indemnité Cadres (> 10 ans) ?", back: "4/10ème de mois par année au-delà de 10 ans", category: "Licenciement" },
+          { front: "Salaire de référence pour le calcul ?", back: "Moyenne des 12 ou 3 derniers mois (le plus favorable)", category: "Licenciement" },
+        ],
+        scenario: {
+          situation: "Un cadre avec 15 ans d'ancienneté est licencié. Son salaire moyen est de 4 000€. Calculez son indemnité conventionnelle.",
+          context: "Le salaire de référence est identique sur 3 et 12 mois.",
+          choices: [
+            { text: "15 × 3/10 × 4000 = 18 000€", isCorrect: false, feedback: "Attention ! Il faut distinguer les 10 premières années des suivantes. Le taux change au-delà de 10 ans." },
+            { text: "(10 × 3/10 × 4000) + (5 × 4/10 × 4000) = 20 000€", isCorrect: true, feedback: "Parfait ! 10 premières années à 3/10 = 12 000€ + 5 années à 4/10 = 8 000€ = 20 000€ au total.", xpBonus: 30 },
+            { text: "15 × 1/4 × 4000 = 15 000€", isCorrect: false, feedback: "C'est le calcul de l'indemnité légale, pas conventionnelle. La CCN est ici plus favorable." },
+          ],
+        },
         quiz: [
           {
             question: "Pour un cadre avec 15 ans d'ancienneté, quel sera le calcul de l'indemnité ?",
@@ -636,6 +905,11 @@ Cette convention s'applique à environ **700 000 salariés** répartis dans plus
           "Jours de fractionnement selon la période de prise",
           "Calcul : 1/10ème ou maintien (le plus favorable)"
         ],
+        flashcards: [
+          { front: "Jours supplémentaires après 5 ans ?", back: "+1 jour ouvrable", category: "Congés" },
+          { front: "Jours supplémentaires après 20 ans ?", back: "+4 jours ouvrables", category: "Congés" },
+          { front: "Période de référence des congés ?", back: "1er juin au 31 mai", category: "Congés" },
+        ],
         quiz: [
           {
             question: "Combien de jours de congés supplémentaires un salarié avec 15 ans d'ancienneté obtient-il ?",
@@ -673,6 +947,11 @@ Cette convention s'applique à environ **700 000 salariés** répartis dans plus
           "Congés familiaux plus favorables que le légal pour les cadres",
           "Maintien de salaire maladie après 1 an d'ancienneté",
           "1er mai : si travaillé = majoration 100%"
+        ],
+        flashcards: [
+          { front: "Congé mariage salarié non-cadre ?", back: "4 jours", category: "Absences" },
+          { front: "Congé mariage Cadre (> 1 an) ?", back: "1 semaine", category: "Absences" },
+          { front: "Maintien de salaire maladie : condition ?", back: "Après 1 an d'ancienneté", category: "Maladie" },
         ],
         quiz: [
           {
@@ -727,6 +1006,12 @@ Cette convention s'applique à environ **700 000 salariés** répartis dans plus
           "Téléchargement véhicule : tous les 90 jours",
           "Téléchargement carte : tous les 28 jours"
         ],
+        flashcards: [
+          { front: "Véhicules soumis au chronotachygraphe ?", back: "> 3,5 tonnes (marchandises) ou > 9 places (voyageurs)", category: "Chrono" },
+          { front: "Fréquence téléchargement données véhicule ?", back: "Tous les 90 jours minimum", category: "Chrono" },
+          { front: "Fréquence téléchargement carte conducteur ?", back: "Tous les 28 jours minimum", category: "Chrono" },
+          { front: "Durée de conservation des données ?", back: "1 an minimum", category: "Chrono" },
+        ],
         quiz: [
           {
             question: "Tous les combien l'employeur doit-il télécharger les données de la carte conducteur ?",
@@ -774,6 +1059,11 @@ Cette convention s'applique à environ **700 000 salariés** répartis dans plus
           "Recyclage tous les 5 ans",
           "Conducteurs TMD : minimum coefficient 150"
         ],
+        flashcards: [
+          { front: "Que signifie ADR ?", back: "Accord européen relatif au transport international des marchandises Dangereuses par Route", category: "TMD" },
+          { front: "Durée formation initiale ADR ?", back: "18 heures minimum", category: "TMD" },
+          { front: "Recyclage ADR ?", back: "Tous les 5 ans", category: "TMD" },
+        ],
         quiz: [
           {
             question: "Tous les combien d'années le certificat ADR doit-il être renouvelé ?",
@@ -812,6 +1102,12 @@ Cette convention s'applique à environ **700 000 salariés** répartis dans plus
           "FCO : 35h tous les 5 ans",
           "Carte de qualification conducteur obligatoire",
           "Formation à la charge de l'employeur"
+        ],
+        flashcards: [
+          { front: "Durée de la FIMO ?", back: "140 heures (4 semaines)", category: "Formation" },
+          { front: "Durée de la FCO ?", back: "35 heures (1 semaine)", category: "Formation" },
+          { front: "Fréquence FCO ?", back: "Tous les 5 ans", category: "Formation" },
+          { front: "Que signifie CQC ?", back: "Carte de Qualification Conducteur", category: "Formation" },
         ],
         quiz: [
           {
@@ -868,6 +1164,11 @@ Cette convention s'applique à environ **700 000 salariés** répartis dans plus
           "Double contrôle : permis + aptitude au poste",
           "Obligation de reclassement en cas d'inaptitude"
         ],
+        flashcards: [
+          { front: "Fréquence visite médicale conducteur ?", back: "Tous les 2 ans maximum (au lieu de 5 ans)", category: "Santé" },
+          { front: "Double contrôle médical ?", back: "1. Médecin agréé (permis)\n2. Médecin du travail (aptitude poste)", category: "Santé" },
+          { front: "Obligation en cas d'inaptitude ?", back: "Reclassement obligatoire par l'employeur", category: "Santé" },
+        ],
         quiz: [
           {
             question: "Quelle est la fréquence maximale du renouvellement de la visite médicale pour un conducteur ?",
@@ -906,6 +1207,20 @@ Cette convention s'applique à environ **700 000 salariés** répartis dans plus
           "Protocole de sécurité pour chargement/déchargement",
           "Droit de refus du conducteur en cas de danger"
         ],
+        flashcards: [
+          { front: "Premier risque professionnel du transport ?", back: "Le risque routier (accidents de la route)", category: "Risques" },
+          { front: "Que signifie DUERP ?", back: "Document Unique d'Évaluation des Risques Professionnels", category: "Risques" },
+          { front: "Le conducteur peut-il refuser un chargement ?", back: "OUI, s'il n'est pas conforme aux règles de sécurité", category: "Droits" },
+        ],
+        scenario: {
+          situation: "Un conducteur constate que le chargement proposé dépasse le poids autorisé de 2 tonnes. Le client insiste pour qu'il parte.",
+          context: "Le conducteur est pressé par le planning et craint des représailles de son employeur.",
+          choices: [
+            { text: "Il doit partir, le planning prime", isCorrect: false, feedback: "Jamais ! La sécurité est prioritaire. Un conducteur ne doit jamais prendre la route en surcharge." },
+            { text: "Il peut et doit refuser ce chargement", isCorrect: true, feedback: "Absolument ! Le droit de refus du conducteur face à un chargement non conforme est un droit fondamental. L'employeur ne peut pas le sanctionner pour cela.", xpBonus: 30 },
+            { text: "Il doit appeler son employeur qui décidera", isCorrect: false, feedback: "Même si prévenir l'employeur est une bonne pratique, le conducteur a un droit de refus autonome face à un danger." },
+          ],
+        },
         quiz: [
           {
             question: "Le conducteur peut-il refuser un chargement non conforme aux règles de sécurité ?",
@@ -955,6 +1270,12 @@ Cette convention s'applique à environ **700 000 salariés** répartis dans plus
           "Visioconférence possible pour réunir les conducteurs",
           "NAO obligatoire : salaires, temps de travail, etc."
         ],
+        flashcards: [
+          { front: "Seuil obligatoire pour le CSE ?", back: "11 salariés et plus", category: "IRP" },
+          { front: "Seuil obligatoire pour la CSSCT ?", back: "300+ salariés (ou risques particuliers)", category: "IRP" },
+          { front: "Que signifie NAO ?", back: "Négociation Annuelle Obligatoire", category: "Négociation" },
+          { front: "Service minimum dans le transport privé ?", back: "NON, pas de service minimum (uniquement dans le service public)", category: "Grève" },
+        ],
         quiz: [
           {
             question: "À partir de quel effectif le CSE est-il obligatoire ?",
@@ -976,4 +1297,16 @@ export function getTotalQuestions(): number {
 
 export function getTotalSections(): number {
   return modules.reduce((acc, m) => acc + m.sections.length, 0);
+}
+
+export function getTotalFlashcards(): number {
+  let count = 0;
+  modules.forEach(m => m.sections.forEach(s => { if (s.flashcards) count += s.flashcards.length; }));
+  return count;
+}
+
+export function getTotalScenarios(): number {
+  let count = 0;
+  modules.forEach(m => m.sections.forEach(s => { if (s.scenario) count++; }));
+  return count;
 }
