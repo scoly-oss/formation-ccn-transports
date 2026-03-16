@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { modules } from '../data/modules';
 import Quiz from '../components/Quiz';
 import Avatar from '../components/Avatar';
-import { ChevronLeft, ChevronRight, CheckCircle2, Circle, BookOpen } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle2, Circle, BookOpen, Brain, ArrowRight, Sparkles } from 'lucide-react';
 
 interface ModulePageProps {
   completedSections: Set<string>;
@@ -29,9 +29,23 @@ export default function ModulePage({ completedSections, onCompleteSection, quizS
 
   if (!mod) {
     return (
-      <div style={{ padding: 40, textAlign: 'center' }}>
-        <h2>Module non trouvé</h2>
-        <button onClick={() => navigate('/')}>Retour au tableau de bord</button>
+      <div style={{ padding: 60, textAlign: 'center' }}>
+        <h2 style={{ color: 'var(--navy)', fontWeight: 800 }}>Module non trouvé</h2>
+        <button
+          onClick={() => navigate('/')}
+          style={{
+            marginTop: 20,
+            padding: '12px 28px',
+            borderRadius: 'var(--radius-sm)',
+            border: 'none',
+            background: 'var(--gradient-orange)',
+            color: '#fff',
+            fontWeight: 700,
+            cursor: 'pointer',
+          }}
+        >
+          Retour au tableau de bord
+        </button>
       </div>
     );
   }
@@ -40,11 +54,9 @@ export default function ModulePage({ completedSections, onCompleteSection, quizS
   const isCompleted = completedSections.has(section.id);
   const hasQuiz = section.quiz && section.quiz.length > 0;
   const quizDone = quizScores[section.id] !== undefined;
+  const completedInModule = mod.sections.filter(s => completedSections.has(s.id)).length;
 
-  const handleMarkComplete = () => {
-    onCompleteSection(section.id);
-  };
-
+  const handleMarkComplete = () => onCompleteSection(section.id);
   const handleQuizComplete = (score: number, total: number) => {
     onQuizComplete(section.id, score, total);
     onCompleteSection(section.id);
@@ -86,16 +98,22 @@ export default function ModulePage({ completedSections, onCompleteSection, quizS
     <div style={{ display: 'flex', gap: 0, minHeight: '100vh' }}>
       {/* Section sidebar */}
       <div style={{
-        width: 260,
-        background: '#fff',
-        borderRight: '1px solid #e2e6ec',
-        padding: '24px 0',
+        width: 280,
+        background: 'var(--white)',
+        borderRight: '1px solid var(--border)',
+        padding: 0,
         position: 'sticky',
         top: 0,
         height: '100vh',
         overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
-        <div style={{ padding: '0 20px 16px' }}>
+        {/* Module header */}
+        <div style={{
+          padding: '24px 24px 20px',
+          borderBottom: '1px solid var(--border)',
+        }}>
           <button
             onClick={() => navigate('/')}
             style={{
@@ -104,61 +122,120 @@ export default function ModulePage({ completedSections, onCompleteSection, quizS
               gap: 6,
               background: 'none',
               border: 'none',
-              color: '#2a3d50',
+              color: 'var(--text-secondary)',
               fontSize: 13,
               cursor: 'pointer',
               padding: 0,
               marginBottom: 16,
+              fontWeight: 500,
             }}
+            onMouseEnter={e => (e.currentTarget.style.color = 'var(--orange)')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-secondary)')}
           >
-            <ChevronLeft size={16} /> Retour
+            <ChevronLeft size={16} /> Tableau de bord
           </button>
-          <h3 style={{ margin: 0, fontSize: 16, color: '#1e2d3d', fontWeight: 700 }}>
+          <h3 style={{
+            margin: 0,
+            fontSize: 17,
+            color: 'var(--navy)',
+            fontWeight: 800,
+            letterSpacing: '-0.02em',
+            lineHeight: 1.3,
+          }}>
             {mod.title}
           </h3>
-          <p style={{ margin: '4px 0 0', fontSize: 12, color: '#2a3d50', opacity: 0.6 }}>
-            {mod.sections.length} sections
-          </p>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            marginTop: 8,
+          }}>
+            <span style={{
+              fontSize: 12,
+              color: 'var(--text-light)',
+              fontWeight: 500,
+            }}>
+              {completedInModule}/{mod.sections.length} sections
+            </span>
+            {/* Mini progress */}
+            <div style={{
+              flex: 1,
+              height: 4,
+              background: 'rgba(30,45,61,0.06)',
+              borderRadius: 2,
+              overflow: 'hidden',
+            }}>
+              <div style={{
+                height: '100%',
+                width: `${(completedInModule / mod.sections.length) * 100}%`,
+                background: 'var(--gradient-orange)',
+                borderRadius: 2,
+                transition: 'width 0.5s',
+              }} />
+            </div>
+          </div>
         </div>
 
-        {mod.sections.map((s, idx) => {
-          const done = completedSections.has(s.id);
-          const active = idx === activeSectionIdx;
-          return (
-            <div
-              key={s.id}
-              onClick={() => goToSection(idx)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: '10px 20px',
-                cursor: 'pointer',
-                background: active ? `${mod.color}08` : 'transparent',
-                borderLeft: active ? `3px solid ${mod.color}` : '3px solid transparent',
-                transition: 'all 0.2s',
-              }}
-            >
-              {done ? (
-                <CheckCircle2 size={18} color="#16a34a" />
-              ) : (
-                <Circle size={18} color={active ? mod.color : '#e2e6ec'} />
-              )}
-              <span style={{
-                fontSize: 13,
-                color: active ? '#1e2d3d' : '#2a3d50',
-                fontWeight: active ? 600 : 400,
-                lineHeight: 1.4,
-              }}>
-                {s.title}
-              </span>
-            </div>
-          );
-        })}
+        {/* Section list */}
+        <div style={{ flex: 1, padding: '12px 12px' }}>
+          {mod.sections.map((s, idx) => {
+            const done = completedSections.has(s.id);
+            const active = idx === activeSectionIdx;
+            return (
+              <div
+                key={s.id}
+                onClick={() => goToSection(idx)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: '12px 14px',
+                  cursor: 'pointer',
+                  background: active ? 'rgba(232,132,44,0.06)' : 'transparent',
+                  borderRadius: 10,
+                  transition: 'all 0.2s',
+                  marginBottom: 2,
+                }}
+              >
+                {done ? (
+                  <CheckCircle2 size={18} color="#22c55e" style={{ flexShrink: 0 }} />
+                ) : (
+                  <div style={{
+                    width: 18,
+                    height: 18,
+                    borderRadius: '50%',
+                    border: `2px solid ${active ? 'var(--orange)' : 'rgba(30,45,61,0.12)'}`,
+                    flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    {active && (
+                      <div style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        background: 'var(--orange)',
+                      }} />
+                    )}
+                  </div>
+                )}
+                <span style={{
+                  fontSize: 13,
+                  color: active ? 'var(--navy)' : 'var(--text-secondary)',
+                  fontWeight: active ? 700 : 500,
+                  lineHeight: 1.4,
+                }}>
+                  {s.title}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Main content */}
-      <div style={{ flex: 1, padding: '32px 48px', maxWidth: 800 }}>
+      <div style={{ flex: 1, padding: '40px 56px', maxWidth: 840 }}>
         <AnimatePresence mode="wait">
           <motion.div
             key={section.id}
@@ -166,47 +243,65 @@ export default function ModulePage({ completedSections, onCompleteSection, quizS
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
           >
+            {/* Avatar message */}
             {avatarMessages[section.id] && (
-              <div style={{ marginBottom: 28 }}>
+              <div style={{ marginBottom: 32 }}>
                 <Avatar message={avatarMessages[section.id]} size="sm" />
               </div>
             )}
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+            {/* Section badge */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
               <span style={{
                 fontSize: 12,
-                fontWeight: 600,
-                color: mod.color,
-                background: `${mod.color}15`,
-                padding: '4px 12px',
+                fontWeight: 700,
+                color: 'var(--orange)',
+                background: 'rgba(232,132,44,0.08)',
+                padding: '5px 14px',
                 borderRadius: 20,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
               }}>
+                <Sparkles size={12} />
                 Section {activeSectionIdx + 1}/{mod.sections.length}
               </span>
               {isCompleted && (
                 <span style={{
                   fontSize: 12,
-                  fontWeight: 600,
-                  color: '#16a34a',
-                  background: '#16a34a15',
-                  padding: '4px 12px',
+                  fontWeight: 700,
+                  color: '#22c55e',
+                  background: 'rgba(34,197,94,0.08)',
+                  padding: '5px 14px',
                   borderRadius: 20,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
                 }}>
-                  ✓ Complétée
+                  <CheckCircle2 size={12} /> Complétée
                 </span>
               )}
             </div>
 
-            <h1 style={{ fontSize: 28, fontWeight: 800, color: '#1e2d3d', margin: '0 0 24px', lineHeight: 1.3 }}>
+            {/* Title */}
+            <h1 style={{
+              fontSize: 32,
+              fontWeight: 900,
+              color: 'var(--navy)',
+              margin: '0 0 32px',
+              lineHeight: 1.2,
+              letterSpacing: '-0.03em',
+            }}>
               {section.title}
             </h1>
 
+            {/* Content */}
             <div
               className="content-body"
               style={{
-                fontSize: 15,
+                fontSize: 16,
                 lineHeight: 1.8,
-                color: '#2a3d50',
+                color: 'var(--text-secondary)',
               }}
               dangerouslySetInnerHTML={{
                 __html: section.content
@@ -219,25 +314,74 @@ export default function ModulePage({ completedSections, onCompleteSection, quizS
               }}
             />
 
+            {/* Key points */}
             {section.keyPoints && section.keyPoints.length > 0 && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
                 style={{
-                  background: `${mod.color}08`,
-                  border: `1px solid ${mod.color}25`,
-                  borderRadius: 14,
-                  padding: '20px 24px',
-                  marginTop: 28,
+                  background: 'linear-gradient(135deg, rgba(232,132,44,0.05), rgba(245,166,35,0.02))',
+                  border: '1px solid rgba(232,132,44,0.12)',
+                  borderRadius: 'var(--radius-lg)',
+                  padding: '24px 28px',
+                  marginTop: 32,
                 }}
               >
-                <h4 style={{ margin: '0 0 12px', fontSize: 15, color: mod.color, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <BookOpen size={18} /> Points clés à retenir
+                <h4 style={{
+                  margin: '0 0 16px',
+                  fontSize: 16,
+                  fontWeight: 800,
+                  color: 'var(--navy)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  letterSpacing: '-0.02em',
+                }}>
+                  <div style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 8,
+                    background: 'var(--gradient-orange)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    <BookOpen size={16} color="#fff" />
+                  </div>
+                  Points clés à retenir
                 </h4>
-                <ul style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <ul style={{
+                  margin: 0,
+                  paddingLeft: 0,
+                  listStyle: 'none',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 10,
+                }}>
                   {section.keyPoints.map((kp, i) => (
-                    <li key={i} style={{ fontSize: 14, color: '#1e2d3d', lineHeight: 1.5 }}>
+                    <li key={i} style={{
+                      fontSize: 14,
+                      color: 'var(--navy)',
+                      lineHeight: 1.6,
+                      fontWeight: 500,
+                      padding: '8px 14px',
+                      background: 'var(--white)',
+                      borderRadius: 10,
+                      border: '1px solid var(--border)',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 10,
+                    }}>
+                      <span style={{
+                        color: 'var(--orange)',
+                        fontWeight: 800,
+                        fontSize: 13,
+                        flexShrink: 0,
+                        marginTop: 1,
+                      }}>
+                        {i + 1}.
+                      </span>
                       {kp}
                     </li>
                   ))}
@@ -247,52 +391,78 @@ export default function ModulePage({ completedSections, onCompleteSection, quizS
 
             {/* Quiz section */}
             {hasQuiz && (
-              <div style={{ marginTop: 36 }}>
+              <div style={{ marginTop: 40 }}>
                 {!showQuiz && !quizDone && (
                   <motion.button
-                    whileHover={{ scale: 1.02 }}
+                    whileHover={{ y: -2, boxShadow: 'var(--shadow-orange)' }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setShowQuiz(true)}
                     style={{
                       width: '100%',
-                      padding: '18px 24px',
-                      borderRadius: 14,
-                      border: `2px dashed ${mod.color}50`,
-                      background: `${mod.color}05`,
-                      color: mod.color,
-                      fontSize: 16,
-                      fontWeight: 700,
+                      padding: '22px 28px',
+                      borderRadius: 'var(--radius-lg)',
+                      border: 'none',
+                      background: 'linear-gradient(135deg, var(--navy) 0%, #2a3f52 100%)',
+                      color: '#fff',
+                      fontSize: 17,
+                      fontWeight: 800,
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: 10,
+                      gap: 12,
+                      letterSpacing: '-0.01em',
+                      boxShadow: 'var(--shadow-lg)',
                     }}
                   >
-                    🧠 Testez vos connaissances
+                    <Brain size={22} />
+                    Testez vos connaissances
+                    <ArrowRight size={18} />
                   </motion.button>
                 )}
 
                 {(showQuiz || quizDone) && section.quiz && (
                   <div style={{
-                    background: '#fff',
-                    border: '1px solid #e2e6ec',
-                    borderRadius: 14,
-                    padding: 28,
+                    background: 'var(--white)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius-xl)',
+                    padding: 32,
+                    boxShadow: 'var(--shadow-md)',
                   }}>
-                    <h3 style={{ margin: '0 0 16px', fontSize: 18, color: '#1e2d3d' }}>
-                      🧠 Quiz
+                    <h3 style={{
+                      margin: '0 0 24px',
+                      fontSize: 20,
+                      fontWeight: 800,
+                      color: 'var(--navy)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      letterSpacing: '-0.02em',
+                    }}>
+                      <div style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 10,
+                        background: 'var(--gradient-orange)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}>
+                        <Brain size={18} color="#fff" />
+                      </div>
+                      Quiz
                     </h3>
                     {quizDone ? (
                       <div style={{
                         textAlign: 'center',
-                        padding: 20,
-                        background: '#16a34a10',
-                        borderRadius: 12,
-                        border: '1px solid #16a34a30',
+                        padding: '28px 24px',
+                        background: 'linear-gradient(135deg, rgba(34,197,94,0.06), rgba(34,197,94,0.02))',
+                        borderRadius: 'var(--radius-lg)',
+                        border: '1px solid rgba(34,197,94,0.15)',
                       }}>
-                        <p style={{ fontSize: 16, color: '#16a34a', fontWeight: 600, margin: 0 }}>
-                          ✓ Quiz terminé — Score : {quizScores[section.id].score}/{quizScores[section.id].total}
+                        <CheckCircle2 size={36} color="#22c55e" style={{ marginBottom: 12 }} />
+                        <p style={{ fontSize: 17, color: '#22c55e', fontWeight: 700, margin: 0 }}>
+                          Quiz terminé — Score : {quizScores[section.id].score}/{quizScores[section.id].total}
                         </p>
                       </div>
                     ) : (
@@ -306,14 +476,14 @@ export default function ModulePage({ completedSections, onCompleteSection, quizS
               </div>
             )}
 
-            {/* Mark complete + navigation */}
+            {/* Navigation */}
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              marginTop: 36,
-              paddingTop: 24,
-              borderTop: '1px solid #e2e6ec',
+              marginTop: 48,
+              paddingTop: 28,
+              borderTop: '1px solid var(--border)',
             }}>
               <button
                 onClick={() => activeSectionIdx > 0 && goToSection(activeSectionIdx - 1)}
@@ -321,91 +491,106 @@ export default function ModulePage({ completedSections, onCompleteSection, quizS
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 6,
-                  padding: '10px 18px',
-                  borderRadius: 10,
-                  border: '1px solid #e2e6ec',
-                  background: '#fff',
-                  color: activeSectionIdx === 0 ? '#ccc' : '#2a3d50',
+                  gap: 8,
+                  padding: '12px 20px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border)',
+                  background: 'var(--white)',
+                  color: activeSectionIdx === 0 ? 'var(--text-light)' : 'var(--navy)',
                   fontSize: 14,
+                  fontWeight: 600,
                   cursor: activeSectionIdx === 0 ? 'default' : 'pointer',
+                  transition: 'all 0.2s',
+                  opacity: activeSectionIdx === 0 ? 0.5 : 1,
                 }}
               >
                 <ChevronLeft size={16} /> Précédent
               </button>
 
               {!isCompleted && (
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={handleMarkComplete}
                   style={{
-                    padding: '10px 22px',
-                    borderRadius: 10,
+                    padding: '12px 24px',
+                    borderRadius: 'var(--radius-sm)',
                     border: 'none',
-                    background: '#16a34a',
+                    background: 'linear-gradient(135deg, #22c55e, #16a34a)',
                     color: '#fff',
                     fontSize: 14,
-                    fontWeight: 600,
+                    fontWeight: 700,
                     cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    boxShadow: '0 4px 12px rgba(34,197,94,0.25)',
                   }}
                 >
-                  ✓ Marquer comme terminée
-                </button>
+                  <CheckCircle2 size={16} /> Marquer comme terminée
+                </motion.button>
               )}
 
               {activeSectionIdx < mod.sections.length - 1 ? (
-                <button
+                <motion.button
+                  whileHover={{ x: 2 }}
                   onClick={() => goToSection(activeSectionIdx + 1)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 6,
-                    padding: '10px 18px',
-                    borderRadius: 10,
+                    gap: 8,
+                    padding: '12px 20px',
+                    borderRadius: 'var(--radius-sm)',
                     border: 'none',
-                    background: mod.color,
+                    background: 'var(--gradient-orange)',
                     color: '#fff',
                     fontSize: 14,
-                    fontWeight: 600,
+                    fontWeight: 700,
                     cursor: 'pointer',
+                    boxShadow: 'var(--shadow-orange)',
                   }}
                 >
                   Suivant <ChevronRight size={16} />
-                </button>
+                </motion.button>
               ) : nextModule ? (
-                <button
+                <motion.button
+                  whileHover={{ x: 2 }}
                   onClick={() => navigate(`/module/${nextModule.id}`)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 6,
-                    padding: '10px 18px',
-                    borderRadius: 10,
+                    gap: 8,
+                    padding: '12px 20px',
+                    borderRadius: 'var(--radius-sm)',
                     border: 'none',
-                    background: mod.color,
+                    background: 'var(--gradient-orange)',
                     color: '#fff',
                     fontSize: 14,
-                    fontWeight: 600,
+                    fontWeight: 700,
                     cursor: 'pointer',
+                    boxShadow: 'var(--shadow-orange)',
                   }}
                 >
                   Module suivant <ChevronRight size={16} />
-                </button>
+                </motion.button>
               ) : (
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
                   onClick={() => navigate('/')}
                   style={{
-                    padding: '10px 18px',
-                    borderRadius: 10,
+                    padding: '12px 24px',
+                    borderRadius: 'var(--radius-sm)',
                     border: 'none',
-                    background: mod.color,
+                    background: 'var(--gradient-orange)',
                     color: '#fff',
                     fontSize: 14,
-                    fontWeight: 600,
+                    fontWeight: 700,
                     cursor: 'pointer',
+                    boxShadow: 'var(--shadow-orange)',
                   }}
                 >
-                  Terminer
-                </button>
+                  Terminer la formation
+                </motion.button>
               )}
             </div>
           </motion.div>

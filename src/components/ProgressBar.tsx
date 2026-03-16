@@ -4,35 +4,54 @@ interface ProgressBarProps {
   value: number;
   max: number;
   label?: string;
-  color?: string;
+  showPercentage?: boolean;
+  height?: number;
 }
 
-export default function ProgressBar({ value, max, label, color = '#e8842c' }: ProgressBarProps) {
+export default function ProgressBar({ value, max, label, showPercentage = true, height = 10 }: ProgressBarProps) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0;
 
   return (
     <div style={{ width: '100%' }}>
-      {label && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 13, color: '#1e2d3d' }}>
-          <span>{label}</span>
-          <span style={{ fontWeight: 600 }}>{pct}%</span>
+      {(label || showPercentage) && (
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          marginBottom: 10,
+          fontSize: 14,
+          color: 'var(--navy)',
+        }}>
+          {label && <span style={{ fontWeight: 600 }}>{label}</span>}
+          {showPercentage && (
+            <span style={{
+              fontWeight: 800,
+              fontSize: 15,
+              background: 'var(--gradient-orange)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}>
+              {pct}%
+            </span>
+          )}
         </div>
       )}
       <div style={{
         width: '100%',
-        height: 8,
-        background: '#e2e6ec',
-        borderRadius: 4,
+        height,
+        background: 'rgba(30,45,61,0.06)',
+        borderRadius: height,
         overflow: 'hidden',
+        position: 'relative',
       }}>
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${pct}%` }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
+          transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] }}
           style={{
             height: '100%',
-            background: `linear-gradient(90deg, ${color}, ${color}dd)`,
-            borderRadius: 4,
+            background: 'var(--gradient-orange)',
+            borderRadius: height,
+            position: 'relative',
           }}
         />
       </div>
